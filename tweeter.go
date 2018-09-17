@@ -15,6 +15,8 @@ func check(e error) {
 
 func main() {
 
+	tweetManager := service.NewTweetManager()
+
 	shell := ishell.New()
 	shell.SetPrompt("Tweeter >> ")
 	shell.Print("Type 'help' to know commands\n")
@@ -36,7 +38,7 @@ func main() {
 
 			tweet := domain.NewTweet(user, text)
 
-			id, err := service.PublishTweet(tweet)
+			id, err := tweetManager.PublishTweet(tweet)
 
 			if err == nil {
 				c.Printf("Tweet sent with id: %v\n", id)
@@ -55,7 +57,7 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			tweet := service.GetTweet()
+			tweet := tweetManager.GetTweet()
 
 			c.Println(tweet)
 
@@ -70,7 +72,7 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			tweets := service.GetTweets()
+			tweets := tweetManager.GetTweets()
 
 			c.Println(tweets)
 
@@ -89,13 +91,53 @@ func main() {
 
 			id, _ := strconv.Atoi(c.ReadLine())
 
-			tweet := service.GetTweetById(id)
+			tweet := tweetManager.GetTweetById(id)
 
 			c.Println(tweet)
 
 			return
 		},
 	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "countTweetsByUser",
+		Help: "Counts the tweets published by the user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Type the user: ")
+
+			user := c.ReadLine()
+
+			count := tweetManager.CountTweetsByUser(user)
+
+			c.Println(count)
+
+			return
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "showTweetsByUser",
+		Help: "Shows the tweets published by the user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Type the user: ")
+
+			user := c.ReadLine()
+
+			tweets := tweetManager.GetTweetsByUser(user)
+
+			c.Println(tweets)
+
+			return
+		},
+	})
+
+	shell.Run()
 
 	shell.AddCmd(&ishell.Cmd{
 		Name: "registerUser",

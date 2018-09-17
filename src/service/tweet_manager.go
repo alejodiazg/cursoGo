@@ -6,15 +6,25 @@ import (
 	"time"
 )
 
+
+type TweetManager struct {
+	users map[string]*domain.User
+	tweets []*domain.Tweet
+	userTweets map[string][]*domain.Tweet
+}
 var users  = make(map[string]*domain.User)
 var tweets []*domain.Tweet
+var userTweets = make(map[string][]*domain.Tweet)
 
-func InitializeService() {
-	tweets = nil
-	users = make(map[string]*domain.User)
+func NewTweetManager() TweetManager {
+	return  TweetManager{
+		users  : make(map[string]*domain.User),
+		tweets : make([]*domain.Tweet,0) ,
+		userTweets : make(map[string][]*domain.Tweet),
+	}
 }
 
-func PublishTweet(toPublish *domain.Tweet)  (int,error) {
+func (tm *TweetManager) PublishTweet(toPublish *domain.Tweet)  (int,error) {
 	var err error = nil
 	if toPublish.User == "" {
 		err =  fmt.Errorf("user is required")
@@ -26,23 +36,28 @@ func PublishTweet(toPublish *domain.Tweet)  (int,error) {
 
 	if err == nil {
 		toPublish.Id = int(time.Now().Unix())
-		tweets = append(tweets, toPublish)
+		tm.tweets = append(tm.tweets, toPublish)
+		_ , ok := tm.userTweets[toPublish.User]
+		if !ok {
+			tm.userTweets[toPublish.User] = make([]*domain.Tweet, 0)
+		}
+		tm.userTweets[toPublish.User] = append(tm.userTweets[toPublish.User], toPublish)
 	}
 
 	return toPublish.Id , err
 }
 
-func GetTweet() *domain.Tweet{
-	return tweets[len(tweets)-1]
+func (tm TweetManager) GetTweet() *domain.Tweet{
+	return tm.tweets[len(tm.tweets)-1]
 }
 
 
-func GetTweets() []*domain.Tweet {
-	return tweets
+func (tm TweetManager) GetTweets() []*domain.Tweet {
+	return tm.tweets
 }
 
-func GetTweetById(id int) *domain.Tweet{
-	for _, x := range tweets {
+func (tm TweetManager) GetTweetById(id int) *domain.Tweet{
+	for _, x := range tm.tweets {
 		if x.Id == id {
 			return x
 		}
@@ -50,14 +65,17 @@ func GetTweetById(id int) *domain.Tweet{
 	return nil
 }
 
-func CountTweetsByUser(user string) int {
-	var i = 0
-	for _, x := range tweets {
-		if x.User == user {
-			i++
-		}
+func (tm TweetManager) CountTweetsByUser(user string) int {
+	list  := tm.userTweets[user]
+	return len(list)
+}
+
+func (tm TweetManager) GetTweetsByUser(user string) []*domain.Tweet {
+	list , ok := tm.userTweets[user]
+	if !ok {
+		list = make([]*domain.Tweet, 0)
 	}
-	return i
+	return list
 }
 
 func RegisterUser(username, name, email, password string) error {
