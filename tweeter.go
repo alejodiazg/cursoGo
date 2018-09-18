@@ -166,7 +166,7 @@ func main() {
 				c.Println("Email is already used")
 			}
 
-			c.Println("User registered, U can now log in =)")
+			c.Println("user registered, U can now log in =)")
 
 			return
 		},

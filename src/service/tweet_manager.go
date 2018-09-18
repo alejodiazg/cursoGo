@@ -9,56 +9,56 @@ import (
 
 type TweetManager struct {
 	users map[string]*domain.User
-	tweets []*domain.Tweet
-	userTweets map[string][]*domain.Tweet
+	tweets []domain.Tweet
+	userTweets map[string][]domain.Tweet
 }
 var users  = make(map[string]*domain.User)
-var tweets []*domain.Tweet
-var userTweets = make(map[string][]*domain.Tweet)
+var tweets []domain.Tweet
+var userTweets = make(map[string][]domain.Tweet)
 
 func NewTweetManager() TweetManager {
 	return  TweetManager{
 		users  : make(map[string]*domain.User),
-		tweets : make([]*domain.Tweet,0) ,
-		userTweets : make(map[string][]*domain.Tweet),
+		tweets : make([]domain.Tweet,0),
+		userTweets : make(map[string][]domain.Tweet),
 	}
 }
 
-func (tm *TweetManager) PublishTweet(toPublish *domain.Tweet)  (int,error) {
+func (tm *TweetManager) PublishTweet(toPublish domain.Tweet)  (int,error) {
 	var err error = nil
-	if toPublish.User == "" {
+	if toPublish.GetUser() == "" {
 		err =  fmt.Errorf("user is required")
-	} else if toPublish.Text == "" {
+	} else if toPublish.GetText() == "" {
 		err =  fmt.Errorf("text is required")
-	} else if len(toPublish.Text) > 140 {
+	} else if len(toPublish.GetText()) > 140 {
 		err =  fmt.Errorf("text exceeds 140 characters")
 	}
 
 	if err == nil {
-		toPublish.Id = int(time.Now().Unix())
+		toPublish.SetId(int(time.Now().Unix()))
 		tm.tweets = append(tm.tweets, toPublish)
-		_ , ok := tm.userTweets[toPublish.User]
+		_ , ok := tm.userTweets[toPublish.GetUser()]
 		if !ok {
-			tm.userTweets[toPublish.User] = make([]*domain.Tweet, 0)
+			tm.userTweets[toPublish.GetUser()] = make([]domain.Tweet, 0)
 		}
-		tm.userTweets[toPublish.User] = append(tm.userTweets[toPublish.User], toPublish)
+		tm.userTweets[toPublish.GetUser()] = append(tm.userTweets[toPublish.GetUser()], toPublish)
 	}
 
-	return toPublish.Id , err
+	return toPublish.GetId() , err
 }
 
-func (tm TweetManager) GetTweet() *domain.Tweet{
+func (tm TweetManager) GetTweet() domain.Tweet{
 	return tm.tweets[len(tm.tweets)-1]
 }
 
 
-func (tm TweetManager) GetTweets() []*domain.Tweet {
+func (tm TweetManager) GetTweets() []domain.Tweet {
 	return tm.tweets
 }
 
-func (tm TweetManager) GetTweetById(id int) *domain.Tweet{
+func (tm TweetManager) GetTweetById(id int) domain.Tweet{
 	for _, x := range tm.tweets {
-		if x.Id == id {
+		if id == x.GetId() {
 			return x
 		}
 	}
@@ -70,10 +70,10 @@ func (tm TweetManager) CountTweetsByUser(user string) int {
 	return len(list)
 }
 
-func (tm TweetManager) GetTweetsByUser(user string) []*domain.Tweet {
+func (tm TweetManager) GetTweetsByUser(user string) []domain.Tweet {
 	list , ok := tm.userTweets[user]
 	if !ok {
-		list = make([]*domain.Tweet, 0)
+		list = make([]domain.Tweet, 0)
 	}
 	return list
 }
